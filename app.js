@@ -6,7 +6,7 @@ const port = process.env.PORT || 3001;
 // Use body-parser middleware to parse JSON bodies
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => res.type('html').send(html));
+// app.get("/", (req, res) => res.type('html').send(html));
 
 // Root route to display "Hello Donskytech"
 app.get('/', (req, res) => {
