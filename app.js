@@ -1,80 +1,60 @@
-const express = require("express");
+const express = require('express');
 const bodyParser = require('body-parser');
+const http = require('http');
+const WebSocket = require('ws');
+
 const app = express();
-const port = process.env.PORT || 3001;
+const port = 3000;
 
-// Use body-parser middleware to parse JSON bodies
+// Create an HTTP server
+const server = http.createServer(app);
+
+// Create a WebSocket server
+const wss = new WebSocket.Server({ server });
+
+// Middleware to parse JSON bodies
 app.use(bodyParser.json());
-
-// app.get("/", (req, res) => res.type('html').send(html));
 
 // Root route to display "Hello Donskytech"
 app.get('/', (req, res) => {
-  res.send('Hello Donskytech');
+    res.send('Hello Water Vending Machine');
 });
 
 // Webhook route to handle POST requests
 app.post('/webhook', (req, res) => {
-  // Log the webhook payload
-  console.log('Received webhook:', req.body);
+    // Log the webhook payload
+    console.log('Received webhook:', req.body);
 
-  // Respond with a 200 status to acknowledge receipt of the webhook
-  res.status(200).send('Webhook received');
+    // Broadcast the payload to all connected WebSocket clients
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(req.body));
+        }
+    });
+
+    // Respond with a 200 status to acknowledge receipt of the webhook
+    res.status(200).send('Webhook received');
 });
 
+// WebSocket connection handler
+wss.on('connection', (ws) => {
+    console.log('New client connected');
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+    // Send a welcome message to the client
+    ws.send('Welcome to the WebSocket server');
 
-server.keepAliveTimeout = 120 * 1000;
-server.headersTimeout = 120 * 1000;
+    // Handle incoming messages from clients
+    ws.on('message', (message) => {
+        console.log('Received message:', message);
+    });
 
-// const html = `
-// <!DOCTYPE html>
-// <html>
-//   <head>
-//     <title>Hello from Render!</title>
-//     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-//     <script>
-//       setTimeout(() => {
-//         confetti({
-//           particleCount: 100,
-//           spread: 70,
-//           origin: { y: 0.6 },
-//           disableForReducedMotion: true
-//         });
-//       }, 500);
-//     </script>
-//     <style>
-//       @import url("https://p.typekit.net/p.css?s=1&k=vnd5zic&ht=tk&f=39475.39476.39477.39478.39479.39480.39481.39482&a=18673890&app=typekit&e=css");
-//       @font-face {
-//         font-family: "neo-sans";
-//         src: url("https://use.typekit.net/af/00ac0a/00000000000000003b9b2033/27/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("woff2"), url("https://use.typekit.net/af/00ac0a/00000000000000003b9b2033/27/d?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("woff"), url("https://use.typekit.net/af/00ac0a/00000000000000003b9b2033/27/a?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("opentype");
-//         font-style: normal;
-//         font-weight: 700;
-//       }
-//       html {
-//         font-family: neo-sans;
-//         font-weight: 700;
-//         font-size: calc(62rem / 16);
-//       }
-//       body {
-//         background: white;
-//       }
-//       section {
-//         border-radius: 1em;
-//         padding: 1em;
-//         position: absolute;
-//         top: 50%;
-//         left: 50%;
-//         margin-right: -50%;
-//         transform: translate(-50%, -50%);
-//       }
-//     </style>
-//   </head>
-//   <body>
-//     <section>
-//       Hello from Render!
-//     </section>
-//   </body>
-// </html>
-// `
+    // Handle client disconnection
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
+});
+
+// Start the server
+server.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+});
