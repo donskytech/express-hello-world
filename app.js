@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 
 // Root route to display "Hello Donskytech"
 app.get('/', (req, res) => {
-    res.send('Hello Water Vending Machine');
+    res.send('Hello Water Vending Machine - test');
 });
 
 // Webhook route to handle POST requests
